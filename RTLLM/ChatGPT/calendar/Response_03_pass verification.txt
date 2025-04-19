@@ -1,0 +1,241 @@
+To approach this problem collaboratively, we can divide the task into smaller, independent submodules. Each expert will be responsible for one submodule. Below is the plan for the division of labor:
+
+Expert	Submodule Description	Verilog Design	Testbench
+Expert 1	Secs Submodule: This submodule is responsible for counting seconds from 0 to 59, resetting to 0 after reaching 59. It will be incremented on each clock cycle unless the reset signal is active.	```verilog	
+module secs_counter (			
+input CLK,
+input RST,
+output reg [5:0] Secs
+); always @(posedge CLK or posedge RST) begin if (RST) Secs <= 6'd0; else if (Secs == 6'd59) Secs <= 6'd0; else Secs <= Secs + 6'd1; end endmodule |verilog module tb_secs_counter; reg CLK; reg RST; wire [5:0] Secs; secs_counter uut (CLK, RST, Secs);
+
+
+always #5 CLK = ~CLK;
+
+initial begin
+    CLK = 0;
+    RST = 1;
+    #10 RST = 0;
+    #600 $finish;
+end
+endmodule
+
+
+| **Expert 2** | **Mins Submodule**: This submodule will count minutes. When the `Secs` submodule hits 59, this module will increment the minutes value. It will reset to 0 when both the `Secs` and `Mins` reach 59. | ```verilog
+module mins_counter (
+    input CLK,
+    input RST,
+    input [5:0] Secs,
+    output reg [5:0] Mins
+);
+    always @(posedge CLK or posedge RST) begin
+        if (RST)
+            Mins <= 6'd0;
+        else if (Secs == 6'd59 && Mins == 6'd59)
+            Mins <= 6'd0;
+        else if (Secs == 6'd59)
+            Mins <= Mins + 6'd1;
+    end
+endmodule
+``` | ```verilog
+module tb_mins_counter;
+    reg CLK;
+    reg RST;
+    reg [5:0] Secs;
+    wire [5:0] Mins;
+    mins_counter uut (CLK, RST, Secs, Mins);
+    
+    always #5 CLK = ~CLK;
+    
+    initial begin
+        CLK = 0;
+        RST = 1;
+        Secs = 6'd59;
+        #10 RST = 0;
+        #600 $finish;
+    end
+endmodule
+``` |
+| **Expert 3** | **Hours Submodule**: This submodule counts hours from 0 to 23. It will increment when both `Secs` and `Mins` are 59, and reset to 0 after reaching 23. | ```verilog
+module hours_counter (
+    input CLK,
+    input RST,
+    input [5:0] Secs,
+    input [5:0] Mins,
+    output reg [5:0] Hours
+);
+    always @(posedge CLK or posedge RST) begin
+        if (RST)
+            Hours <= 6'd0;
+        else if (Secs == 6'd59 && Mins == 6'd59 && Hours == 6'd23)
+            Hours <= 6'd0;
+        else if (Secs == 6'd59 && Mins == 6'd59)
+            Hours <= Hours + 6'd1;
+    end
+endmodule
+``` | ```verilog
+module tb_hours_counter;
+    reg CLK;
+    reg RST;
+    reg [5:0] Secs;
+    reg [5:0] Mins;
+    wire [5:0] Hours;
+    hours_counter uut (CLK, RST, Secs, Mins, Hours);
+    
+    always #5 CLK = ~CLK;
+    
+    initial begin
+        CLK = 0;
+        RST = 1;
+        Secs = 6'd59;
+        Mins = 6'd59;
+        #10 RST = 0;
+        #600 $finish;
+    end
+endmodule
+``` |
+| **Expert 4** | **Top-Level Calendar Module**: This module integrates all the submodules (Secs, Mins, Hours) to form a complete working calendar. It connects the outputs of the `Secs` submodule to the `Mins` submodule and then the `Hours` submodule. | ```verilog
+module calendar (
+    input CLK,
+    input RST,
+    output [5:0] Hours,
+    output [5:0] Mins,
+    output [5:0] Secs
+);
+    wire [5:0] Secs_out;
+    wire [5:0] Mins_out;
+    
+    secs_counter sec_inst (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs_out)
+    );
+    
+    mins_counter min_inst (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs_out),
+        .Mins(Mins_out)
+    );
+    
+    hours_counter hour_inst (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs_out),
+        .Mins(Mins_out),
+        .Hours(Hours)
+    );
+    
+    assign Secs = Secs_out;
+    assign Mins = Mins_out;
+    
+endmodule
+``` | ```verilog
+module tb_calendar;
+    reg CLK;
+    reg RST;
+    wire [5:0] Hours;
+    wire [5:0] Mins;
+    wire [5:0] Secs;
+    
+    calendar uut (CLK, RST, Hours, Mins, Secs);
+    
+    always #5 CLK = ~CLK;
+    
+    initial begin
+        CLK = 0;
+        RST = 1;
+        #10 RST = 0;
+        #600 $finish;
+    end
+endmodule
+``` |
+
+### Merged Final Design
+
+After all experts have designed their respective submodules, the final Verilog code for the full calendar module can be integrated as follows:
+
+```verilog
+module secs_counter (
+    input CLK,
+    input RST,
+    output reg [5:0] Secs
+);
+    always @(posedge CLK or posedge RST) begin
+        if (RST)
+            Secs <= 6'd0;
+        else if (Secs == 6'd59)
+            Secs <= 6'd0;
+        else
+            Secs <= Secs + 6'd1;
+    end
+endmodule
+
+module mins_counter (
+    input CLK,
+    input RST,
+    input [5:0] Secs,
+    output reg [5:0] Mins
+);
+    always @(posedge CLK or posedge RST) begin
+        if (RST)
+            Mins <= 6'd0;
+        else if (Secs == 6'd59 && Mins == 6'd59)
+            Mins <= 6'd0;
+        else if (Secs == 6'd59)
+            Mins <= Mins + 6'd1;
+    end
+endmodule
+
+module hours_counter (
+    input CLK,
+    input RST,
+    input [5:0] Secs,
+    input [5:0] Mins,
+    output reg [5:0] Hours
+);
+    always @(posedge CLK or posedge RST) begin
+        if (RST)
+            Hours <= 6'd0;
+        else if (Secs == 6'd59 && Mins == 6'd59 && Hours == 6'd23)
+            Hours <= 6'd0;
+        else if (Secs == 6'd59 && Mins == 6'd59)
+            Hours <= Hours + 6'd1;
+    end
+endmodule
+
+module calendar (
+    input CLK,
+    input RST,
+    output [5:0] Hours,
+    output [5:0] Mins,
+    output [5:0] Secs
+);
+    wire [5:0] Secs_out;
+    wire [5:0] Mins_out;
+    
+    secs_counter sec_inst (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs_out)
+    );
+    
+    mins_counter min_inst (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs_out),
+        .Mins(Mins_out)
+    );
+    
+    hours_counter hour_inst (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs_out),
+        .Mins(Mins_out),
+        .Hours(Hours)
+    );
+    
+    assign Secs = Secs_out;
+    assign Mins = Mins_out;
+    
+endmodule
+This design should work as expected for a perpetual calendar module. The modules are logically divided into submodules for seconds, minutes, and hours, each with corresponding testbenches to verify their functionality.
