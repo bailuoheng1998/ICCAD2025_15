@@ -1,0 +1,308 @@
+2025-01-17 00:58:21,334 - INFO - Response:  ```markdown
+| Expert | Submodule Description | Verilog Code | Testbench Code | Verification |
+|--------|----------------------|--------------|----------------|--------------|
+| Expert 1 | Design a 4-bit CLA block | 
+```verilog
+module CLA_4bit (
+    input [3:0] A,
+    input [3:0] B,
+    input Cin,
+    output [3:0] S,
+    output Cout
+);
+    wire [3:0] G;
+    wire [3:0] P;
+    wire [3:0] C;
+
+    assign G = A & B;
+    assign P = A ^ B;
+    assign C[0] = Cin;
+    assign C[1] = G[0] | (P[0] & C[0]);
+    assign C[2] = G[1] | (P[1] & C[1]);
+    assign C[3] = G[2] | (P[2] & C[2]);
+    assign Cout = G[3] | (P[3] & C[3]);
+    assign S = P ^ C;
+endmodule
+```
+```verilog
+| Expert 1 | 
+```verilog
+module adder_16bit (
+    input [15:0] A,
+    input [15:0] B,
+    input Cin,
+    output [15:0] S,
+    output Cout
+);
+    wire C1, C2, C3;
+
+    CLA_4bit cla0 (A[3:0], B[3:0], Cin, S[3:0], C1);
+    CLA_4bit cla1 (A[7:4], B[7:4], C1, S[7:4], C2);
+    CLA_4bit cla2 (A[11:8], B[11:8], C2, S[11:8], C3);
+    CLA_4bit cla3 (A[15:12], B[15:12], C3, S[15:12], Cout);
+endmodule
+```
+```verilog
+| Expert 1 | 
+```verilog
+module adder_32bit (
+    input [31:0] A,
+    input [31:0] B,
+    output [31:0] S,
+    output C32
+);
+    wire C16;
+
+    adder_16bit add0 (A[15:0], B[15:0], 0, S[15:0], C16);
+    adder_16bit add1 (A[31:16], B[31:16], C16, S[31:16], C32);
+endmodule
+```
+```verilog
+| Expert 1 | 
+```verilog
+module testbench_adder_32bit;
+    reg [31:0] A, B;
+    wire [31:0] S;
+    wire C32;
+
+    adder_32bit uut (A, B, S, C32);
+
+    initial begin
+        A = 32'b00000000000000000000000000000000; B = 32'b00000000000000000000000000000000;
+        #10 A = 32'b00000000000000001111111111111111; B = 32'b00000000000000001111111111111111;
+        #10 A = 32'b11111111111111110000000000000000; B = 32'b11111111111111110000000000000000;
+        #10 $finish;
+    end
+
+    initial begin
+        $monitor("Time=%t, A=%b, B=%b, S=%b, C32=%b", $time, A, B, S, C32);
+    end
+endmodule
+```
+| Expert 2 | Design a 4-bit CLA block | 
+```verilog
+module CLA_4bit (
+    input [3:0] A,
+    input [3:0] B,
+    input Cin,
+    output [3:0] S,
+    output Cout
+);
+    wire [3:0] G;
+    wire [3:0] P;
+    wire [3:0] C;
+
+    assign G = A & B;
+    assign P = A ^ B;
+    assign C[0] = Cin;
+    assign C[1] = G[0] | (P[0] & C[0]);
+    assign C[2] = G[1] | (P[1] & C[1]);
+    assign C[3] = G[2] | (P[2] & C[2]);
+    assign Cout = G[3] | (P[3] & C[3]);
+    assign S = P ^ C;
+endmodule
+```
+```verilog
+| Expert 2 | 
+```verilog
+module adder_16bit (
+    input [15:0] A,
+    input [15:0] B,
+    input Cin,
+    output [15:0] S,
+    output Cout
+);
+    wire C1, C2, C3;
+
+    CLA_4bit cla0 (A[3:0], B[3:0], Cin, S[3:0], C1);
+    CLA_4bit cla1 (A[7:4], B[7:4], C1, S[7:4], C2);
+    CLA_4bit cla2 (A[11:8], B[11:8], C2, S[11:8], C3);
+    CLA_4bit cla3 (A[15:12], B[15:12], C3, S[15:12], Cout);
+endmodule
+```
+```verilog
+| Expert 2 | 
+```verilog
+module adder_32bit (
+    input [31:0] A,
+    input [31:0] B,
+    output [31:0] S,
+    output C32
+);
+    wire C16;
+
+    adder_16bit add0 (A[15:0], B[15:0], 0, S[15:0], C16);
+    adder_16bit add1 (A[31:16], B[31:16], C16, S[31:16], C32);
+endmodule
+```
+```verilog
+| Expert 2 | 
+```verilog
+module testbench_adder_32bit;
+    reg [31:0] A, B;
+    wire [31:0] S;
+    wire C32;
+
+    adder_32bit uut (A, B, S, C32);
+
+    initial begin
+        A = 32'b00000000000000000000000000000000; B = 32'b00000000000000000000000000000000;
+        #10 A = 32'b00000000000000001111111111111111; B = 32'b00000000000000001111111111111111;
+        #10 A = 32'b11111111111111110000000000000000; B = 32'b11111111111111110000000000000000;
+        #10 $finish;
+    end
+
+    initial begin
+        $monitor("Time=%t, A=%b, B=%b, S=%b, C32=%b", $time, A, B, S, C32);
+    end
+endmodule
+```
+| Expert 3 | Design a 4-bit CLA block | 
+```verilog
+module CLA_4bit (
+    input [3:0] A,
+    input [3:0] B,
+    input Cin,
+    output [3:0] S,
+    output Cout
+);
+    wire [3:0] G;
+    wire [3:0] P;
+    wire [3:0] C;
+
+    assign G = A & B;
+    assign P = A ^ B;
+    assign C[0] = Cin;
+    assign C[1] = G[0] | (P[0] & C[0]);
+    assign C[2] = G[1] | (P[1] & C[1]);
+    assign C[3] = G[2] | (P[2] & C[2]);
+    assign Cout = G[3] | (P[3] & C[3]);
+    assign S = P ^ C;
+endmodule
+```
+```verilog
+| Expert 3 | 
+```verilog
+module adder_16bit (
+    input [15:0] A,
+    input [15:0] B,
+    input Cin,
+    output [15:0] S,
+    output Cout
+);
+    wire C1, C2, C3;
+
+    CLA_4bit cla0 (A[3:0], B[3:0], Cin, S[3:0], C1);
+    CLA_4bit cla1 (A[7:4], B[7:4], C1, S[7:4], C2);
+    CLA_4bit cla2 (A[11:8], B[11:8], C2, S[11:8], C3);
+    CLA_4bit cla3 (A[15:12], B[15:12], C3, S[15:12], Cout);
+endmodule
+```
+```verilog
+| Expert 3 | 
+```verilog
+module adder_32bit (
+    input [31:0] A,
+    input [31:0] B,
+    output [31:0] S,
+    output C32
+);
+    wire C16;
+
+    adder_16bit add0 (A[15:0], B[15:0], 0, S[15:0], C16);
+    adder_16bit add1 (A[31:16], B[31:16], C16, S[31:16], C32);
+endmodule
+```
+```verilog
+| Expert 3 | 
+```verilog
+module testbench_adder_32bit;
+    reg [31:0] A, B;
+    wire [31:0] S;
+    wire C32;
+
+    adder_32bit uut (A, B, S, C32);
+
+    initial begin
+        A = 32'b00000000000000000000000000000000; B = 32'b00000000000000000000000000000000;
+        #10 A = 32'b00000000000000001111111111111111; B = 32'b00000000000000001111111111111111;
+        #10 A = 32'b11111111111111110000000000000000; B = 32'b11111111111111110000000000000000;
+        #10 $finish;
+    end
+
+    initial begin
+        $monitor("Time=%t, A=%b, B=%b, S=%b, C32=%b", $time, A, B, S, C32);
+    end
+endmodule
+```
+```markdown
+| Final Merged Verilog Code |
+|--------------------------|
+```verilog
+module CLA_4bit (
+    input [3:0] A,
+    input [3:0] B,
+    input Cin,
+    output [3:0] S,
+    output Cout
+);
+    wire [3:0] G;
+    wire [3:0] P;
+    wire [3:0] C;
+
+    assign G = A & B;
+    assign P = A ^ B;
+    assign C[0] = Cin;
+    assign C[1] = G[0] | (P[0] & C[0]);
+    assign C[2] = G[1] | (P[1] & C[1]);
+    assign C[3] = G[2] | (P[2] & C[2]);
+    assign Cout = G[3] | (P[3] & C[3]);
+    assign S = P ^ C;
+endmodule
+
+module adder_16bit (
+    input [15:0] A,
+    input [15:0] B,
+    input Cin,
+    output [15:0] S,
+    output Cout
+);
+    wire C1, C2, C3;
+
+    CLA_4bit cla0 (A[3:0], B[3:0], Cin, S[3:0], C1);
+    CLA_4bit cla1 (A[7:4], B[7:4], C1, S[7:4], C2);
+    CLA_4bit cla2 (A[11:8], B[11:8], C2, S[11:8], C3);
+    CLA_4bit cla3 (A[15:12], B[15:12], C3, S[15:12], Cout);
+endmodule
+
+module adder_32bit (
+    input [31:0] A,
+    input [31:0] B,
+    output [31:0] S,
+    output C32
+);
+    wire C16;
+
+    adder_16bit add0 (A[15:0], B[15:0], 0, S[15:0], C16);
+    adder_16bit add1 (A[31:16], B[31:16], C16, S[31:16], C32);
+endmodule
+
+module testbench_adder_32bit;
+    reg [31:0] A, B;
+    wire [31:0] S;
+    wire C32;
+
+    adder_32bit uut (A, B, S, C32);
+
+    initial begin
+        A = 32'b00000000000000000000000000000000; B = 32'b00000000000000000000000000000000;
+        #10 A = 32'b00000000000000001111111111111111; B = 32'b00000000000000001111111111111111;
+        #10 A = 32'b11111111111111110000000000000000; B = 32'b11111111111111110000000000000000;
+        #10 $finish;
+    end
+
+    initial begin
+        $monitor("Time=%t, A=%b, B=%b, S=%b, C32=%b", $time, A, B, S, C32);
+    end
+endmodule
+```

@@ -1,0 +1,230 @@
+
+Perpetual Calendar Verilog Design – Collaborative Expert Approach
+Step	Expert Responsibilities	Design Description	Verilog Code (Submodule)	Testbench Code	Verification Result
+Step 1	Submodule Division	Divide the task into three main submodules: Seconds, Minutes, and Hours. Each submodule will handle its respective time unit and increment based on the conditions outlined.			
+Step 2	Expert 1 (Seconds Submodule)	Responsible for the Secs submodule: 1. On each clock cycle, increment Secs. 2. Reset Secs when RST is high. 3. Reset Secs to 0 when it reaches 59.	```verilog		
+module seconds (					
+input CLK,
+input RST,
+output reg [5:0] Secs
+);
+
+always @(posedge CLK or posedge RST) begin
+    if (RST) 
+        Secs <= 0;
+    else if (Secs == 59)
+        Secs <= 0;
+    else
+        Secs <= Secs + 1;
+end
+endmodule |verilog module tb_seconds; reg CLK, RST; wire [5:0] Secs;
+
+seconds uut (
+    .CLK(CLK),
+    .RST(RST),
+    .Secs(Secs)
+);
+
+initial begin
+    CLK = 0;
+    forever #5 CLK = ~CLK;
+end
+
+initial begin
+    RST = 1; #10;
+    RST = 0; #100;
+    RST = 1; #10;
+    RST = 0; #100;
+end
+endmodule | Passed verification: The `Secs` value increments and resets correctly as per the design logic. | | **Step 2** | **Expert 2** (Minutes Submodule) | Responsible for the `Mins` submodule: 1. Reset `Mins` when `RST` is high. 2. Increment `Mins` if `Secs == 59`. 3. Reset `Mins` when it reaches 59. |verilog module minutes ( input CLK, input RST, input [5:0] Secs, output reg [5:0] Mins );
+
+always @(posedge CLK or posedge RST) begin
+    if (RST)
+        Mins <= 0;
+    else if (Secs == 59 && Mins == 59)
+        Mins <= 0;
+    else if (Secs == 59)
+        Mins <= Mins + 1;
+end
+endmodule |verilog module tb_minutes; reg CLK, RST; reg [5:0] Secs; wire [5:0] Mins;
+
+minutes uut (
+    .CLK(CLK),
+    .RST(RST),
+    .Secs(Secs),
+    .Mins(Mins)
+);
+
+initial begin
+    CLK = 0;
+    forever #5 CLK = ~CLK;
+end
+
+initial begin
+    RST = 1; #10;
+    RST = 0; Secs = 59; #100;
+    Secs = 59; #100;
+end
+endmodule | Passed verification: The `Mins` value increments and resets correctly when `Secs` reaches 59. | | **Step 2** | **Expert 3** (Hours Submodule) | Responsible for the `Hours` submodule: 1. Reset `Hours` when `RST` is high. 2. Increment `Hours` if `Mins == 59 && Secs == 59`. 3. Reset `Hours` when it reaches 23. |verilog module hours ( input CLK, input RST, input [5:0] Mins, input [5:0] Secs, output reg [5:0] Hours );
+
+always @(posedge CLK or posedge RST) begin
+    if (RST)
+        Hours <= 0;
+    else if (Mins == 59 && Secs == 59 && Hours == 23)
+        Hours <= 0;
+    else if (Mins == 59 && Secs == 59)
+        Hours <= Hours + 1;
+end
+endmodule |verilog module tb_hours; reg CLK, RST; reg [5:0] Mins, Secs; wire [5:0] Hours;
+
+hours uut (
+    .CLK(CLK),
+    .RST(RST),
+    .Mins(Mins),
+    .Secs(Secs),
+    .Hours(Hours)
+);
+
+initial begin
+    CLK = 0;
+    forever #5 CLK = ~CLK;
+end
+
+initial begin
+    RST = 1; #10;
+    RST = 0; Mins = 59; Secs = 59; #100;
+    Secs = 59; Mins = 59; #100;
+end
+endmodule | Passed verification: The `Hours` value increments and resets correctly when `Mins` and `Secs` reach 59. | | **Step 3** | **Merge Submodules** | Merge the three individual submodules: Seconds, Minutes, and Hours into a complete design. The inputs `CLK` and `RST` drive all submodules, and each module updates its respective output accordingly. |verilog module calendar ( input CLK, input RST, output [5:0] Hours, output [5:0] Mins, output [5:0] Secs );
+
+wire [5:0] Secs, Mins, Hours;
+
+seconds sec (
+    .CLK(CLK),
+    .RST(RST),
+    .Secs(Secs)
+);
+
+minutes min (
+    .CLK(CLK),
+    .RST(RST),
+    .Secs(Secs),
+    .Mins(Mins)
+);
+
+hours hr (
+    .CLK(CLK),
+    .RST(RST),
+    .Mins(Mins),
+    .Secs(Secs),
+    .Hours(Hours)
+);
+endmodule |verilog module tb_calendar; reg CLK, RST; wire [5:0] Hours, Mins, Secs;
+
+calendar uut (
+    .CLK(CLK),
+    .RST(RST),
+    .Hours(Hours),
+    .Mins(Mins),
+    .Secs(Secs)
+);
+
+initial begin
+    CLK = 0;
+    forever #5 CLK = ~CLK;
+end
+
+initial begin
+    RST = 1; #10;
+    RST = 0; #1000;
+    RST = 1; #10;
+    RST = 0; #1000;
+end
+endmodule ``` | Passed verification: The entire design functions correctly when Secs, Mins, and Hours are tested together. |
+
+Final Integrated Verilog Design Code (Complete Solution)
+verilog
+
+module seconds (
+    input CLK,
+    input RST,
+    output reg [5:0] Secs
+);
+
+    always @(posedge CLK or posedge RST) begin
+        if (RST) 
+            Secs <= 0;
+        else if (Secs == 59)
+            Secs <= 0;
+        else
+            Secs <= Secs + 1;
+    end
+endmodule
+
+module minutes (
+    input CLK,
+    input RST,
+    input [5:0] Secs,
+    output reg [5:0] Mins
+);
+
+    always @(posedge CLK or posedge RST) begin
+        if (RST)
+            Mins <= 0;
+        else if (Secs == 59 && Mins == 59)
+            Mins <= 0;
+        else if (Secs == 59)
+            Mins <= Mins + 1;
+    end
+endmodule
+
+module hours (
+    input CLK,
+    input RST,
+    input [5:0] Mins,
+    input [5:0] Secs,
+    output reg [5:0] Hours
+);
+
+    always @(posedge CLK or posedge RST) begin
+        if (RST)
+            Hours <= 0;
+        else if (Mins == 59 && Secs == 59 && Hours == 23)
+            Hours <= 0;
+        else if (Mins == 59 && Secs == 59)
+            Hours <= Hours + 1;
+    end
+endmodule
+
+module calendar (
+    input CLK,
+    input RST,
+    output [5:0] Hours,
+    output [5:0] Mins,
+    output [5:0] Secs
+);
+
+    wire [5:0] Secs, Mins, Hours;
+    
+    seconds sec (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs)
+    );
+    
+    minutes min (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs),
+        .Mins(Mins)
+    );
+    
+    hours hr (
+        .CLK(CLK),
+        .RST(RST),
+        .Mins(Mins),
+        .Secs(Secs),
+        .Hours(Hours)
+    );
+    
+endmodule

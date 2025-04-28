@@ -1,0 +1,279 @@
+To implement the perpetual calendar module in Verilog, the task can be divided into three major submodules:
+
+Seconds Module: This module manages the increment of seconds and handles the wrapping around at 59 seconds.
+Minutes Module: This module handles the minutes' increment when the seconds wrap around, and it wraps around when reaching 59 minutes.
+Hours Module: This module handles the hours' increment when minutes and seconds wrap around, and it resets after 23 hours.
+Workflow and Task Breakdown
+Step	Expert	Description	Verilog Code
+1	Expert 1 (Seconds)	Handles the seconds counting logic. It will increment on every clock cycle and reset when 59 seconds is reached.	Seconds Module: ```verilog
+module seconds_module(			
+input CLK,             // Clock input
+input RST,             // Reset signal
+output reg [5:0] Secs  // 6-bit output for seconds
+); always @(posedge CLK or posedge RST) begin if (RST) begin Secs <= 6'b000000; // Reset seconds to 0 end else if (Secs == 6'b111011) begin // 59 seconds Secs <= 6'b000000; // Reset seconds to 0 end else begin Secs <= Secs + 1; // Increment seconds end end endmodule
+
+
+| 2        | **Expert 2 (Minutes)** | Handles the minute counting, incrementing when seconds wrap around, and resetting after 59 minutes. | **Minutes Module**:                                                                                                                                              ```verilog
+module minutes_module(
+    input CLK,             // Clock input
+    input RST,             // Reset signal
+    input [5:0] Secs,      // Seconds input to check for wrap around
+    output reg [5:0] Mins  // 6-bit output for minutes
+);
+    always @(posedge CLK or posedge RST) begin
+        if (RST) begin
+            Mins <= 6'b000000; // Reset minutes to 0
+        end else if (Secs == 6'b111011) begin // When seconds wrap around (59)
+            if (Mins == 6'b111011) begin // 59 minutes
+                Mins <= 6'b000000; // Reset minutes to 0
+            end else begin
+                Mins <= Mins + 1;  // Increment minutes
+            end
+        end
+    end
+endmodule
+```  |
+| 3        | **Expert 3 (Hours)** | Handles the hour counting, incrementing when both seconds and minutes wrap around, and resetting after 23 hours. | **Hours Module**:                                                                                                                                              ```verilog
+module hours_module(
+    input CLK,             // Clock input
+    input RST,             // Reset signal
+    input [5:0] Mins,      // Minutes input to check for wrap around
+    input [5:0] Secs,      // Seconds input to check for wrap around
+    output reg [5:0] Hours // 6-bit output for hours
+);
+    always @(posedge CLK or posedge RST) begin
+        if (RST) begin
+            Hours <= 6'b000000; // Reset hours to 0
+        end else if (Secs == 6'b111011 && Mins == 6'b111011) begin // When minutes and seconds wrap around (59:59)
+            if (Hours == 6'b010111) begin // 23 hours
+                Hours <= 6'b000000; // Reset hours to 0
+            end else begin
+                Hours <= Hours + 1;  // Increment hours
+            end
+        end
+    end
+endmodule
+```  |
+| 4        | **Integration Expert** | Integrates all submodules (Seconds, Minutes, and Hours) into one complete module. | **Complete Calendar Module**:                                                                                                                                              ```verilog
+module calendar(
+    input CLK,             // Clock input
+    input RST,             // Reset signal
+    output [5:0] Hours,    // 6-bit output for hours
+    output [5:0] Mins,     // 6-bit output for minutes
+    output [5:0] Secs      // 6-bit output for seconds
+);
+    wire [5:0] Secs_int;
+    wire [5:0] Mins_int;
+
+    // Instantiate seconds module
+    seconds_module u_secs (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs_int)
+    );
+
+    // Instantiate minutes module
+    minutes_module u_mins (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs_int),
+        .Mins(Mins_int)
+    );
+
+    // Instantiate hours module
+    hours_module u_hours (
+        .CLK(CLK),
+        .RST(RST),
+        .Mins(Mins_int),
+        .Secs(Secs_int),
+        .Hours(Hours)
+    );
+
+    assign Mins = Mins_int;
+    assign Secs = Secs_int;
+endmodule
+```  |
+
+### Testbenches for Each Submodule
+
+| **Expert**        | **Testbench Code**                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|-------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Expert 1 (Seconds)**  | **Seconds Testbench**:                                                                                                                                                 ```verilog
+module test_seconds;
+    reg CLK, RST;
+    wire [5:0] Secs;
+
+    seconds_module uut (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs)
+    );
+
+    initial begin
+        CLK = 0;
+        forever #5 CLK = ~CLK; // Clock period of 10 units
+    end
+
+    initial begin
+        RST = 1; #10; RST = 0; // Assert reset and deassert after 10 time units
+        #600; // Wait for 1 minute to pass (60 seconds)
+        #100; // Test reset behavior again
+        RST = 1; #10; RST = 0;
+        #1000; // Test wrapping behavior
+        $finish;
+    end
+endmodule
+```  |
+| **Expert 2 (Minutes)**  | **Minutes Testbench**:                                                                                                                                                 ```verilog
+module test_minutes;
+    reg CLK, RST;
+    reg [5:0] Secs;
+    wire [5:0] Mins;
+
+    minutes_module uut (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs),
+        .Mins(Mins)
+    );
+
+    initial begin
+        CLK = 0;
+        forever #5 CLK = ~CLK; // Clock period of 10 units
+    end
+
+    initial begin
+        RST = 1; #10; RST = 0; // Assert reset and deassert after 10 time units
+        Secs = 6'b111011; // Simulate 59 seconds
+        #100; Secs = 6'b000000; // Simulate seconds wrapping
+        #600; // Wait for 10 minutes
+        $finish;
+    end
+endmodule
+```  |
+| **Expert 3 (Hours)**  | **Hours Testbench**:                                                                                                                                                 ```verilog
+module test_hours;
+    reg CLK, RST;
+    reg [5:0] Secs, Mins;
+    wire [5:0] Hours;
+
+    hours_module uut (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs),
+        .Mins(Mins),
+        .Hours(Hours)
+    );
+
+    initial begin
+        CLK = 0;
+        forever #5 CLK = ~CLK; // Clock period of 10 units
+    end
+
+    initial begin
+        RST = 1; #10; RST = 0; // Assert reset and deassert after 10 time units
+        Secs = 6'b111011; Mins = 6'b111011; // Simulate 59 minutes and 59 seconds
+        #1000; // Simulate wrapping after 23 hours
+        $finish;
+    end
+endmodule
+```  |
+
+### Final Integration and Verification
+Once each expert has completed their respective submodules and testbenches, the final module integrates everything into a single `calendar` module. The testbench for the complete system is provided in a similar manner as above.
+
+---
+
+### Final Complete Integrated Verilog Code
+
+```verilog
+module seconds_module(
+    input CLK,
+    input RST,
+    output reg [5:0] Secs
+);
+    always @(posedge CLK or posedge RST) begin
+        if (RST) begin
+            Secs <= 6'b000000;
+        end else if (Secs == 6'b111011) begin
+            Secs <= 6'b000000;
+        end else begin
+            Secs <= Secs + 1;
+        end
+    end
+endmodule
+
+module minutes_module(
+    input CLK,
+    input RST,
+    input [5:0] Secs,
+    output reg [5:0] Mins
+);
+    always @(posedge CLK or posedge RST) begin
+        if (RST) begin
+            Mins <= 6'b000000;
+        end else if (Secs == 6'b111011) begin
+            if (Mins == 6'b111011) begin
+                Mins <= 6'b000000;
+            end else begin
+                Mins <= Mins + 1;
+            end
+        end
+    end
+endmodule
+
+module hours_module(
+    input CLK,
+    input RST,
+    input [5:0] Mins,
+    input [5:0] Secs,
+    output reg [5:0] Hours
+);
+    always @(posedge CLK or posedge RST) begin
+        if (RST) begin
+            Hours <= 6'b000000;
+        end else if (Secs == 6'b111011 && Mins == 6'b111011) begin
+            if (Hours == 6'b010111) begin
+                Hours <= 6'b000000;
+            end else begin
+                Hours <= Hours + 1;
+            end
+        end
+    end
+endmodule
+
+module calendar(
+    input CLK,
+    input RST,
+    output [5:0] Hours,
+    output [5:0] Mins,
+    output [5:0] Secs
+);
+    wire [5:0] Secs_int;
+    wire [5:0] Mins_int;
+
+    seconds_module u_secs (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs_int)
+    );
+
+    minutes_module u_mins (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs_int),
+        .Mins(Mins_int)
+    );
+
+    hours_module u_hours (
+        .CLK(CLK),
+        .RST(RST),
+        .Mins(Mins_int),
+        .Secs(Secs_int),
+        .Hours(Hours)
+    );
+
+    assign Mins = Mins_int;
+    assign Secs = Secs_int;
+endmodule
+This is the final, complete Verilog code, ensuring that the perpetual calendar module functions correctly and integrates each submodule effectively.

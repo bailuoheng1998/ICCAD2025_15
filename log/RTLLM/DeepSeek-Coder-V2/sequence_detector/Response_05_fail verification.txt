@@ -1,0 +1,326 @@
+2025-01-20 14:06:30,252 - INFO - Response:  ```markdown
+| Expert | Submodule Description | Verilog Code | Testbench Code | Verification |
+|--------|----------------------|-------------|----------------|--------------|
+| Expert 1 | Design the FSM states for sequence detection | 
+```verilog
+module sequence_detector(
+    input clk,
+    input rst_n,
+    input data_in,
+    output reg sequence_detected
+);
+    typedef enum reg {IDLE, S1, S2, S3, S4} state_t;
+    state_t state, next_state;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            state <= IDLE;
+        else
+            state <= next_state;
+    end
+
+    always @(*) begin
+        next_state = state;
+        sequence_detected = 0;
+        case (state)
+            IDLE: begin
+                if (data_in)
+                    next_state = S1;
+            end
+            S1: begin
+                if (!data_in)
+                    next_state = S2;
+            end
+            S2: begin
+                if (data_in)
+                    next_state = S3;
+            end
+            S3: begin
+                if (data_in)
+                    next_state = S4;
+            end
+            S4: begin
+                sequence_detected = 1;
+                if (data_in)
+                    next_state = S1;
+                else
+                    next_state = IDLE;
+            end
+        endcase
+    end
+endmodule
+```
+|  |  |  |  |  |
+|--------|----------------------|-------------|----------------|--------------|
+| Expert 2 | Write the testbench to verify the sequence detector | 
+```verilog
+module testbench;
+    reg clk, rst_n, data_in;
+    wire sequence_detected;
+
+    sequence_detector uut (
+        .clk(clk),
+        .rst_n(rst_n),
+        .data_in(data_in),
+        .sequence_detected(sequence_detected)
+    );
+
+    initial begin
+        // Initialize signals
+        clk = 0;
+        rst_n = 0;
+        data_in = 0;
+        #10 rst_n = 1;
+
+        // Test sequence: 1001
+        #10 data_in = 1;
+        #10 data_in = 0;
+        #10 data_in = 0;
+        #10 data_in = 1;
+        #10 data_in = 1; // Sequence detected
+
+        // Test reset
+        #10 rst_n = 0;
+        #10 rst_n = 1;
+        #10 data_in = 1;
+        #10 data_in = 0;
+        #10 data_in = 0;
+        #10 data_in = 1;
+        #10 data_in = 1; // Sequence detected
+
+        $finish;
+    end
+
+    always #5 clk = ~clk;
+endmodule
+```
+|  |  |  |  |  |
+|--------|----------------------|-------------|----------------|--------------|
+| Expert 3 | Verify the FSM design | 
+```verilog
+module testbench;
+    reg clk, rst_n, data_in;
+    wire sequence_detected;
+
+    sequence_detector uut (
+        .clk(clk),
+        .rst_n(rst_n),
+        .data_in(data_in),
+        .sequence_detected(sequence_detected)
+    );
+
+    initial begin
+        // Initialize signals
+        clk = 0;
+        rst_n = 0;
+        data_in = 0;
+        #10 rst_n = 1;
+
+        // Test sequence: 1001
+        #10 data_in = 1;
+        #10 data_in = 0;
+        #10 data_in = 0;
+        #10 data_in = 1;
+        #10 data_in = 1; // Sequence detected
+
+        // Test reset
+        #10 rst_n = 0;
+        #10 rst_n = 1;
+        #10 data_in = 1;
+        #10 data_in = 0;
+        #10 data_in = 0;
+        #10 data_in = 1;
+        #10 data_in = 1; // Sequence detected
+
+        $finish;
+    end
+
+    always #5 clk = ~clk;
+endmodule
+```
+|  |  |  |  |  |
+|--------|----------------------|-------------|----------------|--------------|
+| Expert 4 | Merge the submodules into a complete design | 
+```verilog
+module sequence_detector(
+    input clk,
+    input rst_n,
+    input data_in,
+    output reg sequence_detected
+);
+    typedef enum reg {IDLE, S1, S2, S3, S4} state_t;
+    state_t state, next_state;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            state <= IDLE;
+        else
+            state <= next_state;
+    end
+
+    always @(*) begin
+        next_state = state;
+        sequence_detected = 0;
+        case (state)
+            IDLE: begin
+                if (data_in)
+                    next_state = S1;
+            end
+            S1: begin
+                if (!data_in)
+                    next_state = S2;
+            end
+            S2: begin
+                if (data_in)
+                    next_state = S3;
+            end
+            S3: begin
+                if (data_in)
+                    next_state = S4;
+            end
+            S4: begin
+                sequence_detected = 1;
+                if (data_in)
+                    next_state = S1;
+                else
+                    next_state = IDLE;
+            end
+        endcase
+    end
+endmodule
+
+module testbench;
+    reg clk, rst_n, data_in;
+    wire sequence_detected;
+
+    sequence_detector uut (
+        .clk(clk),
+        .rst_n(rst_n),
+        .data_in(data_in),
+        .sequence_detected(sequence_detected)
+    );
+
+    initial begin
+        // Initialize signals
+        clk = 0;
+        rst_n = 0;
+        data_in = 0;
+        #10 rst_n = 1;
+
+        // Test sequence: 1001
+        #10 data_in = 1;
+        #10 data_in = 0;
+        #10 data_in = 0;
+        #10 data_in = 1;
+        #10 data_in = 1; // Sequence detected
+
+        // Test reset
+        #10 rst_n = 0;
+        #10 rst_n = 1;
+        #10 data_in = 1;
+        #10 data_in = 0;
+        #10 data_in = 0;
+        #10 data_in = 1;
+        #10 data_in = 1; // Sequence detected
+
+        $finish;
+    end
+
+    always #5 clk = ~clk;
+endmodule
+```
+```markdown
+| Final Merged Verilog Code |
+|--------------------------|
+```verilog
+module sequence_detector(
+    input clk,
+    input rst_n,
+    input data_in,
+    output reg sequence_detected
+);
+    typedef enum reg {IDLE, S1, S2, S3, S4} state_t;
+    state_t state, next_state;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            state <= IDLE;
+        else
+            state <= next_state;
+    end
+
+    always @(*) begin
+        next_state = state;
+        sequence_detected = 0;
+        case (state)
+            IDLE: begin
+                if (data_in)
+                    next_state = S1;
+            end
+            S1: begin
+                if (!data_in)
+                    next_state = S2;
+            end
+            S2: begin
+                if (data_in)
+                    next_state = S3;
+            end
+            S3: begin
+                if (data_in)
+                    next_state = S4;
+            end
+            S4: begin
+                sequence_detected = 1;
+                if (data_in)
+                    next_state = S1;
+                else
+                    next_state = IDLE;
+            end
+        endcase
+    end
+endmodule
+
+module testbench;
+    reg clk, rst_n, data_in;
+    wire sequence_detected;
+
+    sequence_detector uut (
+        .clk(clk),
+        .rst_n(rst_n),
+        .data_in(data_in),
+        .sequence_detected(sequence_detected)
+    );
+
+    initial begin
+        // Initialize signals
+        clk = 0;
+        rst_n = 0;
+        data_in = 0;
+        #10 rst_n = 1;
+
+        // Test sequence: 1001
+        #10 data_in = 1;
+        #10 data_in = 0;
+        #10 data_in = 0;
+        #10 data_in = 1;
+        #10 data_in = 1; // Sequence detected
+
+        // Test reset
+        #10 rst_n = 0;
+        #10 rst_n = 1;
+        #10 data_in = 1;
+        #10 data_in = 0;
+        #10 data_in = 0;
+        #10 data_in = 1;
+        #10 data_in = 1; // Sequence detected
+
+        $finish;
+    end
+
+    always #5 clk = ~clk;
+endmodule
+```
+```markdown
+| Final Merged Verilog Code |
+|--------------------------|
+```

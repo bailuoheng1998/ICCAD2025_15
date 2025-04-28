@@ -1,0 +1,298 @@
+ ```markdown
+| Expert | Submodule Description | Verilog Code | Testbench Code | Verification |
+|--------|----------------------|--------------|----------------|--------------|
+| Expert 1 | Design a 8-bit full adder module with inputs a[7:0], b[7:0], Cin, outputs y[7:0], Co. | 
+```verilog
+module adder_8bit(
+    input [7:0] a,
+    input [7:0] b,
+    input Cin,
+    output [7:0] y,
+    output Co
+);
+    wire [7:0] carry;
+
+    full_adder fa0(
+        .a(a[0]),
+        .b(b[0]),
+        .Cin(Cin),
+        .y(y[0]),
+        .Co(carry[0])
+    );
+
+    genvar i;
+    generate
+        for (i = 1; i < 8; i = i + 1) begin : adder_loop
+            full_adder fa(
+                .a(a[i]),
+                .b(b[i]),
+                .Cin(carry[i-1]),
+                .y(y[i]),
+                .Co(carry[i])
+            );
+        end
+    endgenerate
+
+    assign Co = carry[7];
+endmodule
+```
+```verilog
+module full_adder(
+    input a,
+    input b,
+    input Cin,
+    output y,
+    output Co
+);
+    assign y = a ^ b ^ Cin;
+    assign Co = (a & b) | (b & Cin) | (a & Cin);
+endmodule
+```
+```verilog
+module adder_8bit_tb;
+    reg [7:0] a, b;
+    reg Cin;
+    wire [7:0] y;
+    wire Co;
+
+    adder_8bit uut (
+        .a(a),
+        .b(b),
+        .Cin(Cin),
+        .y(y),
+        .Co(Co)
+    );
+
+    initial begin
+        // Test case 1
+        a = 8'b00000000; b = 8'b00000000; Cin = 0; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+        // Test case 2
+        a = 8'b11111111; b = 8'b00000001; Cin = 1; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+        // Test case 3
+        a = 8'b10101010; b = 8'b01010101; Cin = 0; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+    end
+endmodule
+```
+| Expert 2 | Instantiate 2 instances of the 8-bit adder for a[15:0] and b[15:0], connect Cin and Co appropriately. | 
+```verilog
+module adder_16bit(
+    input [15:0] a,
+    input [15:0] b,
+    input Cin,
+    output [15:0] y,
+    output Co
+);
+    wire [1:0] carry;
+
+    adder_8bit add0(
+        .a(a[7:0]),
+        .b(b[7:0]),
+        .Cin(Cin),
+        .y(y[7:0]),
+        .Co(carry[0])
+    );
+
+    adder_8bit add1(
+        .a(a[15:8]),
+        .b(b[15:8]),
+        .Cin(carry[0]),
+        .y(y[15:8]),
+        .Co(carry[1])
+    );
+
+    assign Co = carry[1];
+endmodule
+```
+```verilog
+module adder_16bit_tb;
+    reg [15:0] a, b;
+    reg Cin;
+    wire [15:0] y;
+    wire Co;
+
+    adder_16bit uut (
+        .a(a),
+        .b(b),
+        .Cin(Cin),
+        .y(y),
+        .Co(Co)
+    );
+
+    initial begin
+        // Test case 1
+        a = 16'b0000000000000000; b = 16'b0000000000000000; Cin = 0; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+        // Test case 2
+        a = 16'b1111111111111111; b = 16'b0000000000000001; Cin = 1; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+        // Test case 3
+        a = 16'b1010101010101010; b = 8'b0101010101010101; Cin = 0; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+    end
+endmodule
+```
+| Expert 3 | Verify the 16-bit adder with testbenches for both 8-bit and 16-bit adders. | 
+```verilog
+module adder_16bit_tb;
+    reg [15:0] a, b;
+    reg Cin;
+    wire [15:0] y;
+    wire Co;
+
+    adder_16bit uut (
+        .a(a),
+        .b(b),
+        .Cin(Cin),
+        .y(y),
+        .Co(Co)
+    );
+
+    initial begin
+        // Test case 1
+        a = 16'b0000000000000000; b = 16'b0000000000000000; Cin = 0; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+        // Test case 2
+        a = 16'b1111111111111111; b = 16'b0000000000000001; Cin = 1; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+        // Test case 3
+        a = 16'b1010101010101010; b = 8'b0101010101010101; Cin = 0; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+    end
+endmodule
+```
+| Merged Design | 
+```verilog
+module adder_16bit(
+    input [15:0] a,
+    input [15:0] b,
+    input Cin,
+    output [15:0] y,
+    output Co
+);
+    wire [1:0] carry;
+
+    adder_8bit add0(
+        .a(a[7:0]),
+        .b(b[7:0]),
+        .Cin(Cin),
+        .y(y[7:0]),
+        .Co(carry[0])
+    );
+
+    adder_8bit add1(
+        .a(a[15:8]),
+        .b(b[15:8]),
+        .Cin(carry[0]),
+        .y(y[15:8]),
+        .Co(carry[1])
+    );
+
+    assign Co = carry[1];
+endmodule
+
+module adder_8bit(
+    input [7:0] a,
+    input [7:0] b,
+    input Cin,
+    output [7:0] y,
+    output Co
+);
+    wire [7:0] carry;
+
+    full_adder fa0(
+        .a(a[0]),
+        .b(b[0]),
+        .Cin(Cin),
+        .y(y[0]),
+        .Co(carry[0])
+    );
+
+    genvar i;
+    generate
+        for (i = 1; i < 8; i = i + 1) begin : adder_loop
+            full_adder fa(
+                .a(a[i]),
+                .b(b[i]),
+                .Cin(carry[i-1]),
+                .y(y[i]),
+                .Co(carry[i])
+            );
+        end
+    endgenerate
+
+    assign Co = carry[7];
+endmodule
+
+module full_adder(
+    input a,
+    input b,
+    input Cin,
+    output y,
+    output Co
+);
+    assign y = a ^ b ^ Cin;
+    assign Co = (a & b) | (b & Cin) | (a & Cin);
+endmodule
+```
+```verilog
+module adder_16bit_tb;
+    reg [15:0] a, b;
+    reg Cin;
+    wire [15:0] y;
+    wire Co;
+
+    adder_16bit uut (
+        .a(a),
+        .b(b),
+        .Cin(Cin),
+        .y(y),
+        .Co(Co)
+    );
+
+    initial begin
+        // Test case 1
+        a = 16'b0000000000000000; b = 16'b0000000000000000; Cin = 0; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+        // Test case 2
+        a = 16'b1111111111111111; b = 16'b0000000000000001; Cin = 1; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+        // Test case 3
+        a = 16'b1010101010101010; b = 8'b0101010101010101; Cin = 0; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+    end
+endmodule
+```
+```verilog
+module adder_8bit_tb;
+    reg [7:0] a, b;
+    reg Cin;
+    wire [7:0] y;
+    wire Co;
+
+    adder_8bit uut (
+        .a(a),
+        .b(b),
+        .Cin(Cin),
+        .y(y),
+        .Co(Co)
+    );
+
+    initial begin
+        // Test case 1
+        a = 8'b00000000; b = 8'b00000000; Cin = 0; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+        // Test case 2
+        a = 8'b11111111; b = 8'b00000001; Cin = 1; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+        // Test case 3
+        a = 8'b10101010; b = 8'b01010101; Cin = 0; #10;
+        $display("a=%b, b=%b, Cin=%b, y=%b, Co=%b", a, b, Cin, y, Co);
+    end
+endmodule
+```
+```markdown
+The final merged, correct and complete Verilog design code for the problem is provided above.
+```

@@ -1,0 +1,171 @@
+ | Step | Expert 1 | Expert 2 | Expert 3 |
+|------|----------|----------|----------|
+| Step 1: Divide the task into three submodules |  |  |  |
+| Submodule 1: CLK_50 Generation |  |  |  |
+| Submodule 2: CLK_10 Generation |  |  |  |
+| Submodule 3: CLK_1 Generation |  |  |  |
+| Step 2: Each expert will design their submodule |  |  |  |
+| Submodule 1: CLK_50 Generation |  |  |  |
+| Natural Language Description: |  |  |  |
+| The CLK_50 generation submodule will use a single flip-flop to divide the clock frequency by 2. On every positive edge of CLK_in or RST, if RST is active, CLK_50 will be set to 0. Otherwise, CLK_50 will be toggled by inverting its current value. |  |  |  |
+| Verilog Code: |  |  |  |
+| ```verilog
+module freq_div_50 (
+    input CLK_in,
+    input RST,
+    output reg CLK_50
+);
+    always @(posedge CLK_in or posedge RST) begin
+        if (RST)
+            CLK_50 <= 0;
+        else
+            CLK_50 <= ~CLK_50;
+    end
+endmodule
+```
+| Testbench Code: |  |  |  |
+| ```verilog
+module testbench;
+    reg CLK_in;
+    reg RST;
+    wire CLK_50;
+
+    freq_div_50 uut (
+        .CLK_in(CLK_in),
+        .RST(RST),
+        .CLK_50(CLK_50)
+    );
+
+    initial begin
+        CLK_in = 0;
+        RST = 1;
+        #10 RST = 0;
+    end
+
+    always #5 CLK_in = ~CLK_in;
+endmodule
+```
+| Submodule 2: CLK_10 Generation |  |  |  |
+| Natural Language Description: |  |  |  |
+| The CLK_10 generation submodule will use a counter to divide the clock frequency by 10. On every positive edge of CLK_in or RST, if RST is active, CLK_10 will be set to 0, and the counter cnt_10 will be reset to 0. If the counter cnt_10 reaches a value of 4, CLK_10 will be toggled by inverting its current value, and the counter cnt_10 will be reset to 0. Otherwise, the counter cnt_10 will be incremented by 1. |  |  |  |
+| Verilog Code: |  |  |  |
+| ```verilog
+module freq_div_10 (
+    input CLK_in,
+    input RST,
+    output reg CLK_10
+);
+    reg [2:0] cnt_10;
+
+    always @(posedge CLK_in or posedge RST) begin
+        if (RST) begin
+            CLK_10 <= 0;
+            cnt_10 <= 0;
+        end else if (cnt_10 == 4) begin
+            CLK_10 <= ~CLK_10;
+            cnt_10 <= 0;
+        end else begin
+            cnt_10 <= cnt_10 + 1;
+        end
+    end
+endmodule
+```
+| Testbench Code: |  |  |  |
+| ```verilog
+module testbench;
+    reg CLK_in;
+    reg RST;
+    wire CLK_10;
+
+    freq_div_10 uut (
+        .CLK_in(CLK_in),
+        .RST(RST),
+        .CLK_10(CLK_10)
+    );
+
+    initial begin
+        CLK_in = 0;
+        RST = 1;
+        #10 RST = 0;
+    end
+
+    always #5 CLK_in = ~CLK_in;
+endmodule
+```
+| Submodule 3: CLK_1 Generation |  |  |  |
+| Natural Language Description: |  |  |  |
+| The CLK_1 generation submodule will use a counter to divide the clock frequency by 100. On every positive edge of CLK_in or RST, if RST is active, CLK_1 will be set to 0, and the counter cnt_100 will be reset to 0. If the counter cnt_100 reaches a value of 49, CLK_1 will be toggled by inverting its current value, and the counter cnt_100 will be reset to 0. Otherwise, the counter cnt_100 will be incremented by 1. |  |  |  |
+| Verilog Code: |  |  |  |
+| ```verilog
+module freq_div_1 (
+    input CLK_in,
+    input RST,
+    output reg CLK_1
+);
+    reg [5:0] cnt_100;
+
+    always @(posedge CLK_in or posedge RST) begin
+        if (RST) begin
+            CLK_1 <= 0;
+            cnt_100 <= 0;
+        end else if (cnt_100 == 49) begin
+            CLK_1 <= ~CLK_1;
+            cnt_100 <= 0;
+        end else begin
+            cnt_100 <= cnt_100 + 1;
+        end
+    end
+endmodule
+```
+| Testbench Code: |  |  |  |
+| ```verilog
+module testbench;
+    reg CLK_in;
+    reg RST;
+    wire CLK_1;
+
+    freq_div_1 uut (
+        .CLK_in(CLK_in),
+        .RST(RST),
+        .CLK_1(CLK_1)
+    );
+
+    initial begin
+        CLK_in = 0;
+        RST = 1;
+        #10 RST = 0;
+    end
+
+    always #5 CLK_in = ~CLK_in;
+endmodule
+```
+| Step 3: Experts merge the final working submodules into a complete design |  |  |  |
+| Final Complete Verilog Code: |  |  |  |
+| ```verilog
+module freq_div (
+    input CLK_in,
+    input RST,
+    output CLK_50,
+    output CLK_10,
+    output CLK_1
+);
+    freq_div_50 u1 (
+        .CLK_in(CLK_in),
+        .RST(RST),
+        .CLK_50(CLK_50)
+    );
+
+    freq_div_10 u2 (
+        .CLK_in(CLK_in),
+        .RST(RST),
+        .CLK_10(CLK_10)
+    );
+
+    freq_div_1 u3 (
+        .CLK_in(CLK_in),
+        .RST(RST),
+        .CLK_1(CLK_1)
+    );
+endmodule
+```
+| Step 4: Provide me with the final complete Verilog code |  |  |  |

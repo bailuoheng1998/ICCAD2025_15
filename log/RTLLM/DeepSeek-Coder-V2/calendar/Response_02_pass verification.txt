@@ -1,0 +1,227 @@
+ | Step | Expert 1 | Expert 2 | Expert 3 |
+|------|----------|----------|----------|
+| Step 1: Divide the task into three submodules |  |  |  |
+| Submodule 1: Seconds Counter | X |  |  |
+| Submodule 2: Minutes Counter |  | X |  |
+| Submodule 3: Hours Counter |  |  | X |
+| Step 2: Each expert will design their submodule |  |  |  |
+| Submodule 1: Seconds Counter |  |  |  |
+| Natural Language Description: The seconds counter module increments the seconds value on each clock cycle. If the seconds value reaches 59, it resets to 0 and triggers the minutes counter to increment. |  |  |  |
+| Verilog Code: 
+```verilog
+module seconds_counter(
+    input wire CLK,
+    input wire RST,
+    output reg [5:0] Secs
+);
+always @(posedge CLK or posedge RST) begin
+    if (RST) begin
+        Secs <= 6'b000000;
+    end else if (Secs == 6'd59) begin
+        Secs <= 6'b000000;
+    end else begin
+        Secs <= Secs + 1;
+    end
+end
+endmodule
+```
+Testbench Code:
+```verilog
+module seconds_counter_tb;
+    reg CLK;
+    reg RST;
+    wire [5:0] Secs;
+
+    seconds_counter uut (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs)
+    );
+
+    initial begin
+        CLK = 0;
+        forever #5 CLK = ~CLK;
+    end
+
+    initial begin
+        RST = 1; #10;
+        RST = 0;
+        #120;
+        $finish;
+    end
+endmodule
+``` |  |  |  |
+| Submodule 2: Minutes Counter |  |  |  |
+| Natural Language Description: The minutes counter module increments the minutes value on each clock cycle. If the seconds value reaches 59 and the minutes value is also 59, it resets the minutes value to 0 and triggers the hours counter to increment. |  |  |  |
+| Verilog Code: 
+```verilog
+module minutes_counter(
+    input wire CLK,
+    input wire RST,
+    input wire [5:0] Secs,
+    output reg [5:0] Mins
+);
+always @(posedge CLK or posedge RST) begin
+    if (RST) begin
+        Mins <= 6'b000000;
+    end else if (Secs == 6'd59 && Mins == 6'd59) begin
+        Mins <= 6'b000000;
+    end else if (Secs == 6'd59) begin
+        Mins <= Mins + 1;
+    end
+end
+endmodule
+```
+Testbench Code:
+```verilog
+module minutes_counter_tb;
+    reg CLK;
+    reg RST;
+    reg [5:0] Secs;
+    wire [5:0] Mins;
+
+    minutes_counter uut (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs),
+        .Mins(Mins)
+    );
+
+    initial begin
+        CLK = 0;
+        forever #5 CLK = ~CLK;
+    end
+
+    initial begin
+        RST = 1; #10;
+        RST = 0;
+        Secs = 6'd59; #10;
+        Secs = 6'd0; #10;
+        Secs = 6'd59; #10;
+        Secs = 6'd59; #10;
+        $finish;
+    end
+endmodule
+``` |  |  |  |
+| Submodule 3: Hours Counter |  |  |  |
+| Natural Language Description: The hours counter module increments the hours value on each clock cycle. If the seconds and minutes values reach 59 and the hours value is also 23, it resets the hours value to 0. Otherwise, it increments the hours value if the minutes and seconds values are both 59. |  |  |  |
+| Verilog Code: 
+```verilog
+module hours_counter(
+    input wire CLK,
+    input wire RST,
+    input wire [5:0] Secs,
+    input wire [5:0] Mins,
+    output reg [5:0] Hours
+);
+always @(posedge CLK or posedge RST) begin
+    if (RST) begin
+        Hours <= 6'b000000;
+    end else if (Secs == 6'd59 && Mins == 6'd59 && Hours == 6'd23) begin
+        Hours <= 6'b000000;
+    end else if (Secs == 6'd59 && Mins == 6'd59) begin
+        Hours <= Hours + 1;
+    end
+end
+endmodule
+```
+Testbench Code:
+```verilog
+module hours_counter_tb;
+    reg CLK;
+    reg RST;
+    reg [5:0] Secs;
+    reg [5:0] Mins;
+    wire [5:0] Hours;
+
+    hours_counter uut (
+        .CLK(CLK),
+        .RST(RST),
+        .Secs(Secs),
+        .Mins(Mins),
+        .Hours(Hours)
+    );
+
+    initial begin
+        CLK = 0;
+        forever #5 CLK = ~CLK;
+    end
+
+    initial begin
+        RST = 1; #10;
+        RST = 0;
+        Secs = 6'd59; Mins = 6'd59; #10;
+        Secs = 6'd0; Mins = 6'd0; #10;
+        Secs = 6'd59; Mins = 6'd59; #10;
+        Secs = 6'd59; Mins = 6'd59; #10;
+        $finish;
+    end
+endmodule
+``` |  |  |  |
+| Step 3: Experts merge the final working submodules into a complete design |  |  |  |
+| Final Complete Verilog Code: 
+```verilog
+module calendar(
+    input wire CLK,
+    input wire RST,
+    output reg [5:0] Hours,
+    output reg [5:0] Mins,
+    output reg [5:0] Secs
+);
+
+always @(posedge CLK or posedge RST) begin
+    if (RST) begin
+        Secs <= 6'b000000;
+        Mins <= 6'b000000;
+        Hours <= 6'b000000;
+    end else begin
+        if (Secs == 6'd59) begin
+            Secs <= 6'b000000;
+            if (Mins == 6'd59) begin
+                Mins <= 6'b000000;
+                if (Hours == 6'd23) begin
+                    Hours <= 6'b000000;
+                end else begin
+                    Hours <= Hours + 1;
+                end
+            end else begin
+                Mins <= Mins + 1;
+            end
+        end else begin
+            Secs <= Secs + 1;
+        end
+    end
+end
+
+endmodule
+```
+Testbench Code:
+```verilog
+module calendar_tb;
+    reg CLK;
+    reg RST;
+    wire [5:0] Hours;
+    wire [5:0] Mins;
+    wire [5:0] Secs;
+
+    calendar uut (
+        .CLK(CLK),
+        .RST(RST),
+        .Hours(Hours),
+        .Mins(Mins),
+        .Secs(Secs)
+    );
+
+    initial begin
+        CLK = 0;
+        forever #5 CLK = ~CLK;
+    end
+
+    initial begin
+        RST = 1; #10;
+        RST = 0;
+        #120;
+        $finish;
+    end
+endmodule
+``` |  |  |  |

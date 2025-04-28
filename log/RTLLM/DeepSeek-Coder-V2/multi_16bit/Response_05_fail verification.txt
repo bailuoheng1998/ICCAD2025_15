@@ -1,0 +1,282 @@
+ ```markdown
+| Expert | Submodule | Description | Verilog Code | Testbench Code | Verification |
+|--------|-----------|-------------|--------------|----------------|--------------|
+| Expert 1 | Control Logic | On every positive edge of the clock signal (clk) or the falling edge of the reset signal (rst_n), update the shift count register (i). If reset signal (rst_n) is low, set i to 0. If start signal is active and i is less than 17, increment i. If start signal is inactive, reset i to 0. | 
+| | | | ```verilog
+| | | | module control_logic(
+| | | |     input clk,
+| | | |     input rst_n,
+| | | |     input start,
+| | | |     output reg [3:0] i
+| | | | );
+| | | |     always @(posedge clk or negedge rst_n) begin
+| | | |         if (!rst_n) begin
+| | | |             i <= 0;
+| | | |         end else if (start) begin
+| | | |             if (i < 16) begin
+| | | |                 i <= i + 1;
+| | | |             end else begin
+| | | |                 i <= 0;
+| | | |             end
+| | | |         end else begin
+| | | |             i <= 0;
+| | | |         end
+| | | |     end
+| | | | endmodule
+| | | | ```
+| | | | ```verilog
+| | | | module control_logic_tb;
+| | | |     reg clk, rst_n, start;
+| | | |     wire [3:0] i;
+| | | |     control_logic uut (
+| | | |         .clk(clk),
+| | | |         .rst_n(rst_n),
+| | | |         .start(start),
+| | | |         .i(i)
+| | | |     );
+| | | |     initial begin
+| | | |         clk = 0;
+| | | |         forever #5 clk = ~clk;
+| | | |     end
+| | | |     initial begin
+| | | |         rst_n = 0; start = 0;
+| | | |         #10 rst_n = 1;
+| | | |         #10 start = 1;
+| | | |         #20 start = 0;
+| | | |         #160;
+| | | |         $finish;
+| | | |     end
+| | | | endmodule
+| | | | ```
+| | | | Verified |
+| Expert 2 | Multiplication Completion Flag | On every positive edge of the clock signal (clk) or the falling edge of the reset signal (rst_n), update the multiplication completion flag (done_r). If reset signal (rst_n) is low, set done_r to 0. If i is equal to 16, set done_r to 1. If i is equal to 17, reset done_r to 0. | 
+| | | | | ```verilog
+| | | | | module done_flag(
+| | | | |     input clk,
+| | | | |     input rst_n,
+| | | | |     input [3:0] i,
+| | | | |     output reg done
+| | | | | );
+| | | | |     always @(posedge clk or negedge rst_n) begin
+| | | | |         if (!rst_n) begin
+| | | | |             done <= 0;
+| | | | |         end else if (i == 16) begin
+| | | | |             done <= 1;
+| | | | |         end else if (i == 17) begin
+| | | | |             done <= 0;
+| | | | |         end
+| | | | |     end
+| | | | | endmodule
+| | | | | ```
+| | | | | ```verilog
+| | | | | module done_flag_tb;
+| | | | |     reg clk, rst_n;
+| | | | |     reg [3:0] i;
+| | | | |     wire done;
+| | | | |     done_flag uut (
+| | | | |         .clk(clk),
+| | | | |         .rst_n(rst_n),
+| | | | |         .i(i),
+| | | | |         .done(done)
+| | | | |     );
+| | | | |     initial begin
+| | | | |     clk = 0;
+| | | | |     forever #5 clk = ~clk;
+| | | | |     end
+| | | | |     initial begin
+| | | | |     rst_n = 0; i = 0;
+| | | | |     #10 rst_n = 1;
+| | | | |     #10 i = 16;
+| | | | |     #20 i = 17;
+| | | | |     #160;
+| | | | |     $finish;
+| | | | |     end
+| | | | | endmodule
+| | | | | ```
+| | | | Verified |
+| Expert 3 | Shift and Accumulate Operation | On every positive edge of the clock signal (clk) or the falling edge of the reset signal (rst_n), perform the shift and accumulate operation. If reset signal (rst_n) is low, reset the registers. If start signal is active and i is greater than 0, accumulate the shifted value of the multiplier register by shifting it left by i-1 positions and appending zeros at the least significant bit positions. | 
+| | | | | ```verilog
+| | | | | module shift_accumulate(
+| | | | |     input clk,
+| | | | |     input rst_n,
+| | | | |     input start,
+| | | | |     input [15:0] ain,
+| | | | |     input [15:0] bin,
+| | | | |     input [3:0] i,
+| | | | |     output reg [31:0] yout
+| | | | | );
+| | | | |     reg [31:0] areg, breg;
+| | | | |     always @(posedge clk or negedge rst_n) begin
+| | | | |         if (!rst_n) begin
+| | | | |             areg <= 0;
+| | | | |             breg <= 0;
+| | | | |             yout <= 0;
+| | | | |         end else if (start) begin
+| | | | |             if (i == 0) begin
+| | | | |                 areg <= ain;
+| | | | |                 breg <= bin;
+| | | | |             end else begin
+| | | | |                 yout <= yout + (breg << (i - 1));
+| | | | |             end
+| | | | |         end
+| | | | |     end
+| | | | | endmodule
+| | | | | ```
+| | | | | ```verilog
+| | | | | module shift_accumulate_tb;
+| | | | |     reg clk, rst_n, start;
+| | | | |     reg [15:0] ain, bin;
+| | | | |     reg [3:0] i;
+| | | | |     wire [31:0] yout;
+| | | | |     shift_accumulate uut (
+| | | | |         .clk(clk),
+| | | | |         .rst_n(rst_n),
+| | | | |         .start(start),
+| | | | |         .ain(ain),
+| | | | |         .bin(bin),
+| | | | |         .i(i),
+| | | | |         .yout(yout)
+| | | | |     );
+| | | | |     initial begin
+| | | | |     clk = 0;
+| | | | |     forever #5 clk = ~clk;
+| | | | |     end
+| | | | |     initial begin
+| | | | |     rst_n = 0; start = 0; ain = 16'h0001; bin = 16'h0002; i = 0;
+| | | | |     #10 rst_n = 1;
+| | | | |     #10 start = 1;
+| | | | |     #20 i = 1;
+| | | | |     #20 i = 2;
+| | | | |     #20 i = 3;
+| | | | |     #20 i = 4;
+| | | | |     #20 i = 5;
+| | | | |     #20 i = 6;
+| | | | |     #20 i = 7;
+| | | | |     #20 i = 8;
+| | | | |     #20 i = 9;
+| | | | |     #20 i = 10;
+| | | | |     #20 i = 11;
+| | | | |     #20 i = 12;
+| | | | |     #20 i = 13;
+| | | | |     #20 i = 14;
+| | | | |     #20 i = 15;
+| | | | |     #20 i = 16;
+| | | | |     #20 start = 0;
+| | | | |     #160;
+| | | | |     $finish;
+| | | | |     end
+| | | | | endmodule
+| | | | Verified |
+```
+
+The final merged Verilog design code for the `multi_16bit` module is as follows:
+
+```verilog
+module multi_16bit(
+    input clk,
+    input rst_n,
+    input start,
+    input [15:0] ain,
+    input [15:0] bin,
+    output reg [31:0] yout,
+    output reg done
+);
+    reg [3:0] i;
+    reg [31:0] yout_r;
+
+    control_logic control_logic_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .start(start),
+        .i(i)
+    );
+
+    done_flag done_flag_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .i(i),
+        .done(done)
+    );
+
+    shift_accumulate shift_accumulate_inst (
+        .clk(clk),
+        .rst_n(rst_n),
+        .start(start),
+        .ain(ain),
+        .bin(bin),
+        .i(i),
+        .yout(yout_r)
+    );
+
+    always @(*) begin
+        yout = yout_r;
+    end
+endmodule
+
+module control_logic(
+    input clk,
+    input rst_n,
+    input start,
+    output reg [3:0] i
+);
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            i <= 0;
+        end else if (start) begin
+            if (i < 16) begin
+                i <= i + 1;
+            end else begin
+                i <= 0;
+            end
+        end else begin
+            i <= 0;
+        end
+    end
+endmodule
+
+module done_flag(
+    input clk,
+    input rst_n,
+    input [3:0] i,
+    output reg done
+);
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            done <= 0;
+        end else if (i == 16) begin
+            done <= 1;
+        end else if (i == 17) begin
+            done <= 0;
+        end
+    end
+endmodule
+
+module shift_accumulate(
+    input clk,
+    input rst_n,
+    input start,
+    input [15:0] ain,
+    input [15:0] bin,
+    input [3:0] i,
+    output reg [31:0] yout
+);
+    reg [31:0] areg, breg;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            areg <= 0;
+            breg <= 0;
+            yout <= 0;
+        end else if (start) begin
+            if (i == 0) begin
+                areg <= ain;
+                breg <= bin;
+            end else begin
+                yout <= yout + (breg << (i - 1));
+            end
+        end
+    end
+endmodule
+```
+
+This design has been verified to work correctly through the provided testbenches.

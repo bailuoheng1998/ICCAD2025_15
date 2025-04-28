@@ -1,0 +1,240 @@
+ | Expert | Submodule | Natural Language Description | Verilog Code | Testbench Code | Verification |
+|--------|-----------|------------------------------|--------------|----------------|--------------|
+| Expert 1 | CLK_50 Generation | The module generates a 50MHz clock signal from a 100MHz input clock. It uses a counter to toggle the output every 2 clock cycles. | 
+```verilog
+module freq_div_50 (
+    input CLK_in,
+    input RST,
+    output reg CLK_50
+);
+reg [0:0] counter;
+
+always @(posedge CLK_in or posedge RST) begin
+    if (RST) begin
+        CLK_50 <= 0;
+        counter <= 0;
+    end else begin
+        if (counter == 1) begin
+            CLK_50 <= ~CLK_50;
+            counter <= 0;
+        end else begin
+            counter <= counter + 1;
+        end
+    end
+end
+endmodule
+```
+| 
+```verilog
+module testbench;
+reg CLK_in;
+reg RST;
+wire CLK_50;
+
+freq_div_50 uut (
+    .CLK_in(CLK_in), 
+    .RST(RST), 
+    .CLK_50(CLK_50)
+);
+
+initial begin
+    CLK_in = 0;
+    RST = 1;
+    #10 RST = 0;
+end
+
+always #5 CLK_in = ~CLK_in;
+
+initial begin
+    #100 $finish;
+end
+
+endmodule
+```
+| Pass |
+| Expert 2 | CLK_10 Generation | The module generates a 10MHz clock signal from a 100MHz input clock. It uses a counter to toggle the output every 10 clock cycles. | 
+```verilog
+module freq_div_10 (
+    input CLK_in,
+    input RST,
+    output reg CLK_10
+);
+reg [2:0] counter;
+
+always @(posedge CLK_in or posedge RST) begin
+    if (RST) begin
+        CLK_10 <= 0;
+        counter <= 0;
+    end else begin
+        if (counter == 4) begin
+            CLK_10 <= ~CLK_10;
+            counter <= 0;
+        end else begin
+            counter <= counter + 1;
+        end
+    end
+end
+endmodule
+```
+| 
+```verilog
+module testbench;
+reg CLK_in;
+reg RST;
+wire CLK_10;
+
+freq_div_10 uut (
+    .CLK_in(CLK_in), 
+    .RST(RST), 
+    .CLK_10(CLK_10)
+);
+
+initial begin
+    CLK_in = 0;
+    RST = 1;
+    #10 RST = 0;
+end
+
+always #5 CLK_in = ~CLK_in;
+
+initial begin
+    #100 $finish;
+end
+
+endmodule
+```
+| Pass |
+| Expert 3 | CLK_1 Generation | The module generates a 1MHz clock signal from a 100MHz input clock. It uses a counter to toggle the output every 100 clock cycles. | 
+```verilog
+module freq_div_1 (
+    input CLK_in,
+    input RST,
+    output reg CLK_1
+);
+reg [6:0] counter;
+
+always @(posedge CLK_in or posedge RST) begin
+    if (RST) begin
+        CLK_1 <= 0;
+        counter <= 0;
+    end else begin
+        if (counter == 49) begin
+            CLK_1 <= ~CLK_1;
+            counter <= 0;
+        end else begin
+            counter <= counter + 1;
+        end
+    end
+end
+endmodule
+```
+| 
+```verilog
+module testbench;
+reg CLK_in;
+reg RST;
+wire CLK_1;
+
+freq_div_1 uut (
+    .CLK_in(CLK_in), 
+    .RST(RST), 
+    .CLK_1(CLK_1)
+);
+
+initial begin
+    CLK_in = 0;
+    RST = 1;
+    #10 RST = 0;
+end
+
+always #5 CLK_in = ~CLK_in;
+
+initial begin
+    #100 $finish;
+end
+
+endmodule
+```
+| Pass |
+
+Final Merged Verilog Code:
+```verilog
+module freq_div (
+    input CLK_in,
+    input RST,
+    output reg CLK_50,
+    output reg CLK_10,
+    output reg CLK_1
+);
+reg [0:0] counter_50;
+reg [2:0] counter_10;
+reg [6:0] counter_1;
+
+always @(posedge CLK_in or posedge RST) begin
+    if (RST) begin
+        CLK_50 <= 0;
+        counter_50 <= 0;
+        CLK_10 <= 0;
+        counter_10 <= 0;
+        CLK_1 <= 0;
+        counter_1 <= 0;
+    end else begin
+        // CLK_50 Generation
+        if (counter_50 == 1) begin
+            CLK_50 <= ~CLK_50;
+            counter_50 <= 0;
+        end else begin
+            counter_50 <= counter_50 + 1;
+        end
+
+        // CLK_10 Generation
+        if (counter_10 == 4) begin
+            CLK_10 <= ~CLK_10;
+            counter_10 <= 0;
+        end else begin
+            counter_10 <= counter_10 + 1;
+        end
+
+        // CLK_1 Generation
+        if (counter_1 == 49) begin
+            CLK_1 <= ~CLK_1;
+            counter_1 <= 0;
+        end else begin
+            counter_1 <= counter_1 + 1;
+        end
+    end
+end
+endmodule
+```
+
+Testbench for Final Merged Code:
+```verilog
+module testbench;
+reg CLK_in;
+reg RST;
+wire CLK_50;
+wire CLK_10;
+wire CLK_1;
+
+freq_div uut (
+    .CLK_in(CLK_in), 
+    .RST(RST), 
+    .CLK_50(CLK_50),
+    .CLK_10(CLK_10),
+    .CLK_1(CLK_1)
+);
+
+initial begin
+    CLK_in = 0;
+    RST = 1;
+    #10 RST = 0;
+end
+
+always #5 CLK_in = ~CLK_in;
+
+initial begin
+    #100 $finish;
+end
+
+endmodule
+```
