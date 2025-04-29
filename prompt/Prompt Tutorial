@@ -1,0 +1,111 @@
+Here is a tutorial to describe how VeriBToT could combine original RTL design description with the proposed prompt:
+
+An example RTL design description in original benchmark is:
+"""
+Module description:
+
+module top_module (
+    input [15:0] a,
+    input [15:0] b,
+    input [15:0] c,
+    input [15:0] d,
+    input [15:0] e,
+    input [15:0] f,
+    input [15:0] g,
+    input [15:0] h,
+    input [15:0] i,
+    input [3:0] sel,
+    output logic [15:0] out
+    );
+
+
+Create a 16-bit wide, 9-to-1 multiplexer. sel=0 chooses a, sel=1 chooses b, etc. For the unused cases (sel=9 to 15), set all output bits to '1'.
+"""
+
+Add some warm-up and operator prompt before it:
+"""
+Simulate Several brilliant, logical experts at Verilog design collaborate to answer a question. The experts discussed how to divide the module into many independent sub-modules as you want. Then each expert solves a subtask and gives a Verilog design.
+When designing each submodule, experts should first give the natural language description to describe the implementation of this submodule, and then give the Verilog code of this submodule design and the corresponding testbench code to verify this Verilog design. Then the expert verifies whether the generated Verilog design can pass the testbench. If the verification is correct, the task of the expert is completed, and the result is submitted to the parent node, waiting for other experts to finish their respective parts. Experts discuss with each other and give the final merged, correct and complete Verilog design code for this problem.
+If the verification fails, each expert first tries to design this submodule again, and if rethink fails after repeated three times, there will be two choices: Go back to the previous step to re-plan the tasks that this submodule needs to complete, and then perform the above steps again. Alternatively, divide the submodule into smaller submodules and repeat the steps to try to find the correct Verilog design code for the submodule.
+After all the smaller submodules are designed correctly, the result of the correct design code is merged layer by layer to solve the correct design code of the expert needs to solve the submodule, and submitted to the root node, waiting for other experts to finish their respective parts. Experts discuss with each other and give the final merged, correct and complete Verilog design code for this problem.
+The entire process can be described using a backtrack tree, where each node represents a triplet consisting of an RTL design language description, Verilog code, and testbench code. The following operations can be performed on the nodes:
+The problem-solving process should follow these steps:
+Branch Generator (B): Divide the module into independent submodules, ensuring low coupling and high cohesion. For each submodule, provide a natural language description, Verilog code, and testbench code.
+Node Evaluator (E): Verify the Verilog code of each submodule against its testbench. If the code passes the testbench, submit it to the parent node for integration.
+Node Rethinker (R): If the Verilog code fails verification, redesign the submodule. Repeat this process up to three times. If unsuccessful, proceed to the next step.
+Backtrack Executor (K): If redesigning fails, reevaluate the task decomposition at the current level. Either adjust the responsibilities of the submodules or divide the submodule into smaller submodules and continue the design process.
+Code Aggregator (A): After all submodules are verified, recursively integrate the submodules layer by layer into a complete Verilog design. Provide the final design, including all Verilog code and testbench verification.
+For clarity, your entire response should be in a markdown table. The question is:
+"""
+
+Add some reasoning process prompt after it:
+"""
+Design Process and Workflow:
+
+Step 1: Use the Branch Generator (B) to divide the top module into smaller submodules, ensuring each submodule is cohesive and independently verifiable.
+Step 2: Each expert will design their submodule;
+Step 3: For each submodule, use the Node Evaluator (E) to test the submodule’s Verilog code against its testbench to ensure correctness.
+Step 4: If a submodule fails verification, use the Node Rethinker (R) to redesign it up to three times. If still unsuccessful, use the Backtrack Executor (K) to adjust the task decomposition or further divide the submodule.
+Step 5: Experts merge the submodules into a complete design, containing complete code for all submodules. Use the Code Aggregator (A) to integrate all verified submodules into the final complete Verilog design.
+Step 6: Verify the final design against the top module’s testbench to ensure correctness. Provide me with the final complete and correct Verilog code.
+
+Goal:
+
+Generate a complete and correct Verilog design for the question.
+Provide each expert with clear responsibilities, ensuring a collaborative and logical design process.
+
+Please think very carefully about this question and give me a fully integrated Verilog code design that can run independently. For clarity, your entire response should be in a markdown table.
+"""
+
+
+So the complete prompt is:
+"""
+Simulate Several brilliant, logical experts at Verilog design collaborate to answer a question. The experts discussed how to divide the module into many independent sub-modules as you want. Then each expert solves a subtask and gives a Verilog design.
+When designing each submodule, experts should first give the natural language description to describe the implementation of this submodule, and then give the Verilog code of this submodule design and the corresponding testbench code to verify this Verilog design. Then the expert verifies whether the generated Verilog design can pass the testbench. If the verification is correct, the task of the expert is completed, and the result is submitted to the parent node, waiting for other experts to finish their respective parts. Experts discuss with each other and give the final merged, correct and complete Verilog design code for this problem.
+If the verification fails, each expert first tries to design this submodule again, and if rethink fails after repeated three times, there will be two choices: Go back to the previous step to re-plan the tasks that this submodule needs to complete, and then perform the above steps again. Alternatively, divide the submodule into smaller submodules and repeat the steps to try to find the correct Verilog design code for the submodule.
+After all the smaller submodules are designed correctly, the result of the correct design code is merged layer by layer to solve the correct design code of the expert needs to solve the submodule, and submitted to the root node, waiting for other experts to finish their respective parts. Experts discuss with each other and give the final merged, correct and complete Verilog design code for this problem.
+The entire process can be described using a backtrack tree, where each node represents a triplet consisting of an RTL design language description, Verilog code, and testbench code. The following operations can be performed on the nodes:
+The problem-solving process should follow these steps:
+Branch Generator (B): Divide the module into independent submodules, ensuring low coupling and high cohesion. For each submodule, provide a natural language description, Verilog code, and testbench code.
+Node Evaluator (E): Verify the Verilog code of each submodule against its testbench. If the code passes the testbench, submit it to the parent node for integration.
+Node Rethinker (R): If the Verilog code fails verification, redesign the submodule. Repeat this process up to three times. If unsuccessful, proceed to the next step.
+Backtrack Executor (K): If redesigning fails, reevaluate the task decomposition at the current level. Either adjust the responsibilities of the submodules or divide the submodule into smaller submodules and continue the design process.
+Code Aggregator (A): After all submodules are verified, recursively integrate the submodules layer by layer into a complete Verilog design. Provide the final design, including all Verilog code and testbench verification.
+For clarity, your entire response should be in a markdown table. The question is:
+
+
+Module description:
+
+module top_module (
+    input [15:0] a,
+    input [15:0] b,
+    input [15:0] c,
+    input [15:0] d,
+    input [15:0] e,
+    input [15:0] f,
+    input [15:0] g,
+    input [15:0] h,
+    input [15:0] i,
+    input [3:0] sel,
+    output logic [15:0] out
+    );
+
+
+Create a 16-bit wide, 9-to-1 multiplexer. sel=0 chooses a, sel=1 chooses b, etc. For the unused cases (sel=9 to 15), set all output bits to '1'.
+
+Design Process and Workflow:
+
+Step 1: Use the Branch Generator (B) to divide the top module into smaller submodules, ensuring each submodule is cohesive and independently verifiable.
+Step 2: Each expert will design their submodule;
+Step 3: For each submodule, use the Node Evaluator (E) to test the submodule’s Verilog code against its testbench to ensure correctness.
+Step 4: If a submodule fails verification, use the Node Rethinker (R) to redesign it up to three times. If still unsuccessful, use the Backtrack Executor (K) to adjust the task decomposition or further divide the submodule.
+Step 5: Experts merge the submodules into a complete design, containing complete code for all submodules. Use the Code Aggregator (A) to integrate all verified submodules into the final complete Verilog design.
+Step 6: Verify the final design against the top module’s testbench to ensure correctness. Provide me with the final complete and correct Verilog code.
+
+Goal:
+
+Generate a complete and correct Verilog design for the question.
+Provide each expert with clear responsibilities, ensuring a collaborative and logical design process.
+
+Please think very carefully about this question and give me a fully integrated Verilog code design that can run independently. For clarity, your entire response should be in a markdown table.
+"""
